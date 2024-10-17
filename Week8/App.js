@@ -32,7 +32,7 @@ export default function App() {
     <UserContext.Provider value={{ user, setUser }}>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Add"
+          initialRouteName="TodoApp"
           screenOptions={{ header: customeHeader }}>
           <Stack.Screen name="Home" component={Home}  options={{headerShown: false}}/>
           <Stack.Screen name="Add" component={AddPage} />

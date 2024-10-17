@@ -4,18 +4,27 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  View, TextInput
+  View,
+  TextInput,
 } from 'react-native';
 import React, { useEffect, useState, useContext } from 'react';
 import { Checkbox } from 'react-native-paper';
 import { UserContext } from '../App';
 import { PencilLine, Trash2, Search } from 'lucide-react-native';
+import axios from 'axios';
 
-const API_URL = 'https://66ff3c9f2b9aac9c997ea01b.mockapi.io/todos';
+export const API_URL = 'https://66ff3c9f2b9aac9c997ea01b.mockapi.io/todos';
 
-const TodoItem = ({ id, name, isCompleted, createdAt, onDelete, onEdit }) => {
+const TodoItem = ({
+  id,
+  name,
+  isCompleted,
+  createdAt,
+  onDelete,
+  onEdit,
+  navigation,
+}) => {
   const [checked, setChecked] = React.useState(false);
-
   return (
     <TouchableOpacity style={styles.toDoItem} onPress={setChecked}>
       <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
@@ -23,10 +32,10 @@ const TodoItem = ({ id, name, isCompleted, createdAt, onDelete, onEdit }) => {
         <Text style={{ color: 'white' }}> {name} </Text>{' '}
       </View>{' '}
       <View style={{ flexDirection: 'row', gap: 2, alignItems: 'center' }}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>onEdit(id, name)}>
           <PencilLine color="#fff" size={18} />
         </TouchableOpacity>{' '}
-        <TouchableOpacity onPress={() => onDelete(id)}>
+        <TouchableOpacity onPress={() => onDelete(id, name)}>
           <Trash2 color="red" size={18} />
         </TouchableOpacity>{' '}
       </View>{' '}
@@ -36,27 +45,16 @@ const TodoItem = ({ id, name, isCompleted, createdAt, onDelete, onEdit }) => {
 
 export default function TodoApp({ navigation }) {
   const [todos, setTodos] = useState();
-  const { user } = useContext(UserContext);
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(API_URL);
-      const data = await response.json();
+      const response = await axios.get(API_URL);
+      const data = await response.data;
       setTodos(data);
     };
 
     fetchData();
   }, []);
-
-  const handleAdd = async (payload) => {
-    const response = await fetch(API_URL, {
-      method: 'post',
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-
-    setTodos((prev) => [data, ...prev]);
-  };
 
   const handleDelete = async (id) => {
     const response = await fetch(API_URL + '/' + id, { method: 'DELETE' });
@@ -66,13 +64,8 @@ export default function TodoApp({ navigation }) {
     setTodos((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const handleEdit = async (payload) => {
-    const response = await fetch(API_URL + '/' + id, { method: 'PUT' });
-    const data = await response.json();
-
-    setTodos((prev) =>
-      prev.map((item) => (item.id === payload.id ? payload : item))
-    );
+  const handleEdit = (id, name) => {
+    navigation.navigate('Add', { id: id, name: name });
   };
 
   return (
@@ -85,7 +78,7 @@ export default function TodoApp({ navigation }) {
         style={styles.flatList}
         data={todos}
         renderItem={({ item }) => (
-          <TodoItem {...item} onDelete={handleDelete} onEdit={handleEdit} />
+          <TodoItem {...item} onDelete={handleDelete} onEdit={handleEdit}/>
         )}
         keyExtractor={(item) => item.id}
       />{' '}
@@ -124,6 +117,7 @@ const styles = StyleSheet.create({
   flatList: {
     flex: 1,
     padding: 16,
+    maxHeight: 300,
   },
   action: {
     height: '20%',
